@@ -6,35 +6,52 @@ import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
 
 contract Token is ERC1155, Ownable {
 
-    struct Pet {
-        uint8 damage;
-        uint8 magic;
-        uint256 lastMeal;
-        uint256 endurance;
+    uint8 constant FLOWER = 1;
+    uint8 constant FEATHER = 2;
+    uint8 constant SANDS = 3;
+    uint8 constant GOBLET = 4;
+    uint8 constant CIRCLET = 5;
+
+    struct Relic {
+        uint8 part;
+        uint8 set;
+        uint8 mainOpType;
+        uint256 mainOpValue;
+        uint8[4] subOpType;
+        uint256[4] subOpValue;
+        uint8 level;
+        uint256 exp;
     }
 
     uint256 nextId = 0;
 
-    mapping(uint256 => Pet) private _tokenDetails;
+    mapping(uint256 => Relic) private _tokenDetails;
 
     constructor(string memory name, string memory symbol, string memory uri) ERC1155(uri) {
 
     }
 
-    function getTokenDetails(uint256 tokenId) public view returns (Pet memory) {
+    function getTokenDetails(uint256 tokenId) public view returns (Relic memory) {
         return _tokenDetails[tokenId];
     }
 
-    function mint(uint8 damage, uint8 magic, uint256 endurance) public onlyOwner {
-        _tokenDetails[nextId] = Pet(damage, magic, block.timestamp, endurance);
+    function mint(uint8 part, uint8 set, uint8 mainOpType, uint256 mainOpValue, uint8[4] memory subOpType, uint256[4] memory subOpValue) public onlyOwner {
+        uint8 level = 0;
+        uint256 exp = 0;
+        _tokenDetails[nextId] = Relic(part, set, mainOpType, mainOpValue, subOpType, subOpValue, level, exp);
         _mint(msg.sender, nextId, 1, "");
         nextId++;
     }
 
-    function feed(uint256 tokenId) public {
-        Pet storage pet = _tokenDetails[tokenId];
-        require(pet.lastMeal + pet.endurance > block.timestamp);
-        pet.lastMeal = block.timestamp;
+    function enhance(uint256 tokenId, uint8 targetIndex, uint256 targetValue, uint8 targetType) public {
+        Relic storage relic = _tokenDetails[tokenId];
+        relic.level += 1;
+        if (targetIndex != 0 && targetValue != 0) {
+            if (relic.subOpType[3] == 0) {
+                relic.subOpType[3] = targetType;
+            }
+            relic.subOpValue[targetIndex-1] += targetValue;
+        }
     }
 
     function getAllTokensForUser(address user) public view returns (uint256[] memory) {
@@ -62,8 +79,7 @@ contract Token is ERC1155, Ownable {
     }
 
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, string memory data) public view onlyOwner {
-        Pet storage pet = _tokenDetails[ids[0]];
-        require(pet.lastMeal + pet.endurance > block.timestamp);
+        Relic storage relic = _tokenDetails[ids[0]];
     }
 
     function _ownerOf(uint256 tokenId) internal view returns (bool) {

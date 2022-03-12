@@ -52,3 +52,7 @@
 .feed_btn {
     margin-top: 5px;
 }
+
+#main-container {
+    min-height: 100vh;
+}
