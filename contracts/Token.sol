@@ -35,12 +35,90 @@ contract Token is ERC1155, Ownable {
         return _tokenDetails[tokenId];
     }
 
-    function mint(uint8 part, uint8 set, uint8 mainOpType, uint256 mainOpValue, uint8[4] memory subOpType, uint256[4] memory subOpValue) public onlyOwner {
+    function mint(uint256 location) public onlyOwner {
         uint8 level = 0;
         uint256 exp = 0;
+
+        uint8 set = getRandomSet(location);
+        uint8 part = getRandomPart();
+        uint8 mainOpType = getMainOpType(part);
+        uint256 mainOpValue = getMainOpValue(mainOpType);
+        uint8[4] memory subOpType = getSubOpType(mainOpType);
+        uint256[4] memory subOpValue = getSubOpValue(subOpType);
+
         _tokenDetails[nextId] = Relic(part, set, mainOpType, mainOpValue, subOpType, subOpValue, level, exp);
         _mint(msg.sender, nextId, 1, "");
         nextId++;
+    }
+
+    function getRandomPart() public returns (uint8) {
+        uint8 part = uint8(createRandom(6));
+        return part;
+    }
+
+    function getRandomSet(uint256 location) public returns (uint8) {
+        uint8 part = uint8(createRandom(3));
+        return part;
+    }
+
+    function getMainOpType(uint8 part) public returns (uint8) {
+        uint8 mainOpType = 0;
+        if (part == 1) {
+            mainOpType = 2;
+        }
+        else if (part == 2) {
+            mainOpType = 1;
+        }     
+        else if (part == 3) {
+            uint8[5] memory typeArray;
+            typeArray = [4, 5, 6, 9, 10];
+            mainOpType = typeArray[createRandom(6) - 1];
+        }
+        else if (part == 4) {
+            uint8[11] memory typeArray;
+            typeArray = [4, 5, 6, 9, 11, 12, 13, 14, 15, 16, 17];
+            mainOpType = typeArray[createRandom(12) - 1];
+        }
+        else if (part == 5) {
+            uint8[7] memory typeArray;
+            typeArray = [4, 5, 6, 7, 8, 9, 18];
+            mainOpType = typeArray[createRandom(8) - 1];
+        }
+        return mainOpType;
+    }
+
+    function getMainOpValue(uint8 mainOpType) public returns (uint256) {
+        uint16[18] memory valueArray = [470, 7170, 0, 70, 70, 87, 47, 93, 280, 78, 87, 70, 70, 70, 70, 70, 70, 54];
+        uint256 mainOpValue = valueArray[mainOpType-1];
+        return mainOpValue;
+    }
+
+    function getSubOpType(uint8 mainOpType) public returns (uint8[4] memory) {
+        uint8[4] memory subOpType = [0, 0, 0, 0];
+        uint8 isFourLine = uint8(createRandom(3) - 1);
+        uint8[10] memory typeArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+        if (typeArray.indexOf(mainOpType) != -1) {
+            typeArray.splice(typeArray.indexOf(mainOpType), 1);
+        }
+
+        for (uint8 i = 0; i < 4; i++) {
+            subOpType[i] = typeArray.splice(Math.floor(Math.random() * typeArray.length), 1)[0];
+        }
+
+        if (!isFourLine) {
+            subOpType[3] = 0;
+        }
+
+        return subOpType;
+    }
+
+    function getSubOpValue(uint8[4] memory subOpType) public returns (uint256[4] memory) {
+
+    }
+
+    function createRandom(uint number) public view returns(uint){
+        return uint(blockhash(block.number-1)) % number; // 1 to number-1;
     }
 
     function enhance(uint256 tokenId, uint8 targetIndex, uint256 targetValue, uint8 targetType) public {
