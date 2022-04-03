@@ -13,13 +13,13 @@ contract Token is ERC1155, Ownable {
     uint8 constant CIRCLET = 5;
 
     struct Relic {
-        uint8 part;
-        uint8 set;
-        uint8 mainOpType;
+        uint256 part;
+        uint256 set;
+        uint256 mainOpType;
         uint256 mainOpValue;
-        uint8[4] subOpType;
+        uint256[4] subOpType;
         uint256[4] subOpValue;
-        uint8 level;
+        uint256 level;
         uint256 exp;
     }
 
@@ -35,15 +35,24 @@ contract Token is ERC1155, Ownable {
         return _tokenDetails[tokenId];
     }
 
+    function indexOf(uint256[10] memory arr, uint256 searchFor) public pure returns (int256) {
+        for (int256 i = 0; i < int256(arr.length); i++) {
+            if (arr[uint256(i)] == searchFor) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     function mint(uint256 location) public onlyOwner {
-        uint8 level = 0;
+        uint256 level = 0;
         uint256 exp = 0;
 
-        uint8 set = getRandomSet(location);
-        uint8 part = getRandomPart();
-        uint8 mainOpType = getMainOpType(part);
+        uint256 set = getRandomSet(location);
+        uint256 part = getRandomPart();
+        uint256 mainOpType = getMainOpType(part);
         uint256 mainOpValue = getMainOpValue(mainOpType);
-        uint8[4] memory subOpType = getSubOpType(mainOpType);
+        uint256[4] memory subOpType = getSubOpType(mainOpType);
         uint256[4] memory subOpValue = getSubOpValue(subOpType);
 
         _tokenDetails[nextId] = Relic(part, set, mainOpType, mainOpValue, subOpType, subOpValue, level, exp);
@@ -51,18 +60,18 @@ contract Token is ERC1155, Ownable {
         nextId++;
     }
 
-    function getRandomPart() public returns (uint8) {
-        uint8 part = uint8(createRandom(6));
+    function getRandomPart() public view returns (uint256) {
+        uint256 part = uint256(createRandom(5, 0));
         return part;
     }
 
-    function getRandomSet(uint256 location) public returns (uint8) {
-        uint8 part = uint8(createRandom(3));
+    function getRandomSet(uint256 location) public view returns (uint256) {
+        uint256 part = uint256(createRandom(2, 0));
         return part;
     }
 
-    function getMainOpType(uint8 part) public returns (uint8) {
-        uint8 mainOpType = 0;
+    function getMainOpType(uint256 part) public view returns (uint256) {
+        uint256 mainOpType = 0;
         if (part == 1) {
             mainOpType = 2;
         }
@@ -70,55 +79,68 @@ contract Token is ERC1155, Ownable {
             mainOpType = 1;
         }     
         else if (part == 3) {
-            uint8[5] memory typeArray;
-            typeArray = [4, 5, 6, 9, 10];
-            mainOpType = typeArray[createRandom(6) - 1];
+            uint256[5] memory typeArray;
+            typeArray = [uint256(4), 5, 6, 9, 10];
+            mainOpType = typeArray[createRandom(typeArray.length, 0)];
         }
         else if (part == 4) {
-            uint8[11] memory typeArray;
-            typeArray = [4, 5, 6, 9, 11, 12, 13, 14, 15, 16, 17];
-            mainOpType = typeArray[createRandom(12) - 1];
+            uint256[11] memory typeArray;
+            typeArray = [uint256(4), 5, 6, 9, 11, 12, 13, 14, 15, 16, 17];
+            mainOpType = typeArray[createRandom(typeArray.length, 0)];
         }
         else if (part == 5) {
-            uint8[7] memory typeArray;
-            typeArray = [4, 5, 6, 7, 8, 9, 18];
-            mainOpType = typeArray[createRandom(8) - 1];
+            uint256[7] memory typeArray = [uint256(4), 5, 6, 7, 8, 9, 18];
+            mainOpType = typeArray[createRandom(typeArray.length, 0)];
         }
         return mainOpType;
     }
 
-    function getMainOpValue(uint8 mainOpType) public returns (uint256) {
-        uint16[18] memory valueArray = [470, 7170, 0, 70, 70, 87, 47, 93, 280, 78, 87, 70, 70, 70, 70, 70, 70, 54];
+    function getMainOpValue(uint256 mainOpType) public pure returns (uint256) {
+        uint256[18] memory valueArray = [uint256(470), 7170, 0, 70, 70, 87, 47, 93, 280, 78, 87, 70, 70, 70, 70, 70, 70, 54];
         uint256 mainOpValue = valueArray[mainOpType-1];
         return mainOpValue;
     }
 
-    function getSubOpType(uint8 mainOpType) public returns (uint8[4] memory) {
-        uint8[4] memory subOpType = [0, 0, 0, 0];
-        uint8 isFourLine = uint8(createRandom(3) - 1);
-        uint8[10] memory typeArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    function getSubOpType(uint256 mainOpType) public view returns (uint256[4] memory) {
+        uint256[4] memory subOpType = [uint256(0), 0, 0, 0];
+        uint256 isFourLine = uint256(createRandom(2, 0));
+        uint256[10] memory typeArray = [uint256(1), 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-        if (typeArray.indexOf(mainOpType) != -1) {
-            typeArray.splice(typeArray.indexOf(mainOpType), 1);
+        if (indexOf(typeArray, mainOpType) != -1) {
+            delete typeArray[uint256(indexOf(typeArray, mainOpType))];
         }
 
-        for (uint8 i = 0; i < 4; i++) {
-            subOpType[i] = typeArray.splice(Math.floor(Math.random() * typeArray.length), 1)[0];
+        for (uint256 i = 0; i < 4; i++) {
+            subOpType[i] = typeArray[createRandom(typeArray.length, i)];
+            delete typeArray[uint256(indexOf(typeArray, subOpType[i]))];
         }
 
-        if (!isFourLine) {
+        if (isFourLine == 0) {
             subOpType[3] = 0;
         }
 
         return subOpType;
     }
 
-    function getSubOpValue(uint8[4] memory subOpType) public returns (uint256[4] memory) {
+    function getSubOpValue(uint256[4] memory subOpType) public view returns (uint256[4] memory) {
+        uint256[44] memory valueArray = 
+            [uint256(140), 160, 180, 190, 2090, 2390, 2690, 2990, 160, 190, 210, 230, 140, 160, 180, 190, 41, 47, 53, 58,
+                41, 47, 53, 58, 51, 58, 66, 73, 27, 31, 35, 39, 54, 62, 70, 78, 160, 190, 210, 230, 45, 52, 58, 65];
+        uint256[4] memory subOpValue = [uint256(0), 0, 0, 0];
+        
+        uint256 offset;
+        for (uint256 i = 0; i < 4; i++) {
+            if (subOpType[i] == 0) { continue; }
+            offset = uint256(createRandom(4, i));
 
+            subOpValue[i] = valueArray[(subOpType[i]-1) * 4 + offset];
+        }
+
+        return subOpValue;
     }
 
-    function createRandom(uint number) public view returns(uint){
-        return uint(blockhash(block.number-1)) % number; // 1 to number-1;
+    function createRandom(uint number, uint randNonce) public view returns(uint) {
+        return uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, randNonce))) % number;
     }
 
     function enhance(uint256 tokenId, uint8 targetIndex, uint256 targetValue, uint8 targetType) public {
