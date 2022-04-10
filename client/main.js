@@ -4,7 +4,7 @@ const serverUrl = "https://lxawa30bwsfh.usemoralis.com:2053/server";
 //Moralis.start({serverUrl, appId});
 Moralis.initialize(appId);
 Moralis.serverURL = serverUrl;
-const CONTRACT_ADDRESS = "0xD44ae3534291F36CcD6FD230Cc9CD66E9934F74E";
+const CONTRACT_ADDRESS = "0x7842A6a26aC3fC8b76A060bd260249E4900Bf29F";
 
 const MAIN_TAB = 0;
 const RELIC_TAB = 1;
@@ -111,7 +111,7 @@ async function rerenderEnhanced(relicId) {
 
 function renderRelic(id, data, rerender=false){
     let percentageString = 0 + '%';
-
+    console.log(data.subOpType[3])
     if(rerender) {
         $(`#relic-${id} .relic_level`).html(`+${data.level}`);
         $(`#relic-${id} .sub_op_field`).html(`<div><span class="relic_sub_op"> - ${optionNameArray[data.subOpType[0]-1]}: ${data.subOpValue[0]/10}</span></div>
@@ -163,47 +163,9 @@ function getAbi() {
 }
 
 async function enhancing(relicId) {
-    relic_array = await contract.methods.getAllTokensForUser(ethereum.selectedAddress).call({from: ethereum.selectedAddress});
-
-    let details = await contract.methods.getTokenDetails(relicId).call({from: ethereum.selectedAddress});
-
-    if (details.level % 4 == 3) {
-        let targetIndex = getRandomInt(1, 4);
-        let offsetIndex = getRandomInt(1, 4);
-        
-        let targetType;
-        let targetValue;
-        if (details.subOpType[3] == 0) {
-            let typeArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-            for (let i = 0; i < 3; i++) {
-                console.log(Number(details.subOpType[i]))
-                console.log(typeArray);
-                typeArray.splice(typeArray.indexOf(Number(details.subOpType[i])), 1);
-            }
-            console.log(typeArray);
-            targetIndex = 4;
-            targetType = typeArray.splice(Math.floor(Math.random() * typeArray.length), 1)[0];
-            targetValue = valueArray[targetType-1][offsetIndex-1];
-        }
-        else {
-            targetType = details.subOpType[targetIndex-1];
-            targetValue = valueArray[targetType-1][offsetIndex-1];
-        }
-        
-        contract.methods.enhance(relicId, targetIndex, targetValue, targetType).send({from: ethereum.selectedAddress}).on("receipt", ( () => {
-            console.log("done");
-            
-            rerenderEnhanced(relicId);
-        }))        
-    }
-    else {
-        console.log("not 4");
-        contract.methods.enhance(relicId, 0, 0, 0).send({from: ethereum.selectedAddress}).on("receipt", ( () => {
-            console.log("done");
-            
-            rerenderEnhanced(relicId);
-        }))
-    }
+    contract.methods.enhance(relicId).send({from: ethereum.selectedAddress}).on("receipt", ( () => {
+        rerenderEnhanced(relicId);
+    }))
 }
 
 function changeTab(tabNumber) {
@@ -225,6 +187,7 @@ function changeTab(tabNumber) {
 }
 
 async function getNewRelic(location) {
+    //contract.methods.sendTransaction({from: ethereum.selectedAddress[0], to: CONTRACT_ADDRESS, value: web3.utils.toWei("5", "ether"), gas: 100000});
     contract.methods.mint(location).send({from: ethereum.selectedAddress}).on("receipt", ( async () => {
         relic_array = await contract.methods.getAllTokensForUser(ethereum.selectedAddress).call({from: ethereum.selectedAddress});
         let details = await contract.methods.getTokenDetails(relic_array.length-1).call({from: ethereum.selectedAddress});

@@ -105,14 +105,17 @@ contract Token is ERC1155, Ownable {
         uint256[4] memory subOpType = [uint256(0), 0, 0, 0];
         uint256 isFourLine = uint256(createRandom(2, 0));
         uint256[10] memory typeArray = [uint256(1), 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        uint length = 10;
 
         if (indexOf(typeArray, mainOpType) != -1) {
-            delete typeArray[uint256(indexOf(typeArray, mainOpType))];
+            remove(uint256(indexOf(typeArray, mainOpType)), typeArray);
+            length -= 1;
         }
 
         for (uint256 i = 0; i < 4; i++) {
-            subOpType[i] = typeArray[createRandom(typeArray.length, i)];
-            delete typeArray[uint256(indexOf(typeArray, subOpType[i]))];
+            subOpType[i] = typeArray[createRandom(length, i)];
+            remove(uint256(indexOf(typeArray, subOpType[i])), typeArray);
+            length -= 1;
         }
 
         if (isFourLine == 0) {
@@ -123,8 +126,8 @@ contract Token is ERC1155, Ownable {
     }
 
     function getSubOpValue(uint256[4] memory subOpType) public view returns (uint256[4] memory) {
-        uint256[44] memory valueArray = 
-            [uint256(140), 160, 180, 190, 2090, 2390, 2690, 2990, 160, 190, 210, 230, 140, 160, 180, 190, 41, 47, 53, 58,
+        uint256[40] memory valueArray = 
+            [uint256(140), 160, 180, 190, 2090, 2390, 2690, 2990, 160, 190, 210, 230, 41, 47, 53, 58,
                 41, 47, 53, 58, 51, 58, 66, 73, 27, 31, 35, 39, 54, 62, 70, 78, 160, 190, 210, 230, 45, 52, 58, 65];
         uint256[4] memory subOpValue = [uint256(0), 0, 0, 0];
         
@@ -143,15 +146,38 @@ contract Token is ERC1155, Ownable {
         return uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, randNonce))) % number;
     }
 
-    function enhance(uint256 tokenId, uint8 targetIndex, uint256 targetValue, uint8 targetType) public {
+    function enhance(uint256 tokenId) public {
         Relic storage relic = _tokenDetails[tokenId];
-        relic.level += 1;
-        if (targetIndex != 0 && targetValue != 0) {
+
+        uint256 targetIndex = createRandom(4, 0);
+        uint256 offsetIndex = createRandom(4, 1);
+        uint256 targetType = 0;
+        uint256 targetValue = 0;
+        uint256[10] memory typeArray = [uint256(1), 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        uint256[40] memory valueArray = 
+            [uint256(140), 160, 180, 190, 2090, 2390, 2690, 2990, 160, 190, 210, 230, 41, 47, 53, 58,
+                41, 47, 53, 58, 51, 58, 66, 73, 27, 31, 35, 39, 54, 62, 70, 78, 160, 190, 210, 230, 45, 52, 58, 65];
+        uint length = 10;
+
+        if (relic.level % 4 == 3) {
             if (relic.subOpType[3] == 0) {
+                for (uint256 i = 0; i < 3; i++) {
+                    remove(uint256(indexOf(typeArray, relic.subOpType[i])), typeArray);
+                    length -= 1;
+                }
+                targetIndex = 3;
+                targetType = createRandom(length, 2);
                 relic.subOpType[3] = targetType;
             }
-            relic.subOpValue[targetIndex-1] += targetValue;
+            else {
+                targetType = relic.subOpType[targetIndex];
+                targetValue = valueArray[targetType * 4 + offsetIndex];
+            }
+
+            relic.subOpValue[targetIndex] += targetValue;
         }
+        
+        relic.level += 1;
     }
 
     function getAllTokensForUser(address user) public view returns (uint256[] memory) {
@@ -175,6 +201,12 @@ contract Token is ERC1155, Ownable {
                 }
             }
             return result;
+        }
+    }
+
+    function remove(uint256 index, uint256[10] memory array) public pure {
+        for(uint i = index; i < array.length-1; i++) {
+            array[i] = array[i+1];
         }
     }
 
