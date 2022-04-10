@@ -4,7 +4,7 @@ const serverUrl = "https://lxawa30bwsfh.usemoralis.com:2053/server";
 //Moralis.start({serverUrl, appId});
 Moralis.initialize(appId);
 Moralis.serverURL = serverUrl;
-const CONTRACT_ADDRESS = "0x7842A6a26aC3fC8b76A060bd260249E4900Bf29F";
+const CONTRACT_ADDRESS = "0xc389984Fed896Ba290dfF843CEFfff500eBE999c";
 
 const MAIN_TAB = 0;
 const RELIC_TAB = 1;
@@ -163,8 +163,11 @@ function getAbi() {
 }
 
 async function enhancing(relicId) {
+    let details = await contract.methods.getTokenDetails(relic_array.length-1).call({from: ethereum.selectedAddress});
     contract.methods.enhance(relicId).send({from: ethereum.selectedAddress}).on("receipt", ( () => {
         rerenderEnhanced(relicId);
+        
+        console.log(details.subOpType);
     }))
 }
 

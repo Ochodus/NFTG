@@ -127,15 +127,23 @@ contract Token is ERC1155, Ownable {
 
     function getSubOpValue(uint256[4] memory subOpType) public view returns (uint256[4] memory) {
         uint256[40] memory valueArray = 
-            [uint256(140), 160, 180, 190, 2090, 2390, 2690, 2990, 160, 190, 210, 230, 41, 47, 53, 58,
-                41, 47, 53, 58, 51, 58, 66, 73, 27, 31, 35, 39, 54, 62, 70, 78, 160, 190, 210, 230, 45, 52, 58, 65];
+            [uint256(140), 160, 180, 190, 
+                2090, 2390, 2690, 2990, 
+                160, 190, 210, 230, 
+                41, 47, 53, 58,
+                41, 47, 53, 58, 
+                51, 58, 66, 73, 
+                27, 31, 35, 39, 
+                54, 62, 70, 78, 
+                160, 190, 210, 230, 
+                45, 52, 58, 65];
         uint256[4] memory subOpValue = [uint256(0), 0, 0, 0];
         
         uint256 offset;
         for (uint256 i = 0; i < 4; i++) {
             if (subOpType[i] == 0) { continue; }
-            offset = uint256(createRandom(4, i));
 
+            offset = uint256(createRandom(4, i));
             subOpValue[i] = valueArray[(subOpType[i]-1) * 4 + offset];
         }
 
@@ -155,8 +163,16 @@ contract Token is ERC1155, Ownable {
         uint256 targetValue = 0;
         uint256[10] memory typeArray = [uint256(1), 2, 3, 4, 5, 6, 7, 8, 9, 10];
         uint256[40] memory valueArray = 
-            [uint256(140), 160, 180, 190, 2090, 2390, 2690, 2990, 160, 190, 210, 230, 41, 47, 53, 58,
-                41, 47, 53, 58, 51, 58, 66, 73, 27, 31, 35, 39, 54, 62, 70, 78, 160, 190, 210, 230, 45, 52, 58, 65];
+            [uint256(140), 160, 180, 190, 
+                2090, 2390, 2690, 2990, 
+                160, 190, 210, 230, 
+                41, 47, 53, 58,
+                41, 47, 53, 58, 
+                51, 58, 66, 73, 
+                27, 31, 35, 39, 
+                54, 62, 70, 78, 
+                160, 190, 210, 230, 
+                45, 52, 58, 65];
         uint length = 10;
 
         if (relic.level % 4 == 3) {
@@ -167,16 +183,16 @@ contract Token is ERC1155, Ownable {
                 }
                 targetIndex = 3;
                 targetType = createRandom(length, 2);
-                relic.subOpType[3] = targetType;
+                relic.subOpType[3] = targetType;        
             }
             else {
                 targetType = relic.subOpType[targetIndex];
-                targetValue = valueArray[targetType * 4 + offsetIndex];
             }
 
+            targetValue = valueArray[(targetType-1) * 4 + offsetIndex];
             relic.subOpValue[targetIndex] += targetValue;
         }
-        
+
         relic.level += 1;
     }
 
