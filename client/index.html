@@ -25,34 +25,66 @@
               <a class="nav-link" id="relic-tab">My Relics</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" id="breed-tab">Breed</a>
+              <a class="nav-link" id="domain-tab">Abyss</a>
             </li>
           </ul>
         </div>
       </div>
     </nav>
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="myModalLabel">Select Relics</h4>
+          </div>
+          <div class="modal-body">
+            <div class="row" id="mater-row">
+
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">닫기</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="promo" id="main">
       <div class="container">
         <div class="banner">
-          <h3>Collect and breed bubbly friends!</h3>
+          <h3>Collect and enhance your relics!</h3>
           <button id="btn-login" class="btn btn-primary btn-homepage">Get Started</button>
         </div>
       </div>
     </div>
     <div class="container" id="main-container">
       <div id="game">
-        <div class="row" id="relic-row">
+        <div class="overview">
+          <div class="row" id="relic-row">
+
+          </div>
+        </div>
+        <div class="detail">
 
         </div>
       </div>
-      <div id="breed">
-        <button id="breeding" class="btn btn-primary btn-block">Breed</button>
+      <div id="domain">
+        <button type="button" id="domain-0" class="btn btn-primary btn-block">Defeat Daily Boss</button>
+        <button type="button" id="domain-1" class="btn btn-primary btn-block">Midsummer Courtyard</button>
+        <button type="button" id="domain-2" class="btn btn-primary btn-block">Valley of Remembrance</button>
+        <button type="button" id="domain-3" class="btn btn-primary btn-block">Domain of Guyun</button>
+        <button type="button" id="domain-4" class="btn btn-primary btn-block">Hidden Palace of Zhou Formula</button>
+        <button type="button" id="domain-5" class="btn btn-primary btn-block">Clear Pool and Mountain Cavern</button>
+        <button type="button" id="domain-6" class="btn btn-primary btn-block">Peak of Vindagnyr</button>
+        <button type="button" id="domain-7" class="btn btn-primary btn-block">Ridge Watch</button>
+        <button type="button" id="domain-8" class="btn btn-primary btn-block">Momiji-Dyed Court</button>
+        <button type="button" id="domain-9" class="btn btn-primary btn-block">Slumbering Court</button>
+        <button type="button" id="domain-10" class="btn btn-primary btn-block">The Lost Valley</button>
+      </div>
+      <div class="container" id="enhancing-page">
+        
       </div>
     </div>
-
-    <div class="container" id="tail-container">
-      <button id="btn-logout" class="btn btn-primary btn-block">Logout</button>
-    </div>
+    
     <script type="text/javascript" src="./main.js"></script>
   </body> 
 </html>
