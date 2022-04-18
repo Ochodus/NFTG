@@ -1,7 +1,3 @@
-#pet_img {
-    width: 100%;
-}
-
 #game {
     display: none;
     padding: 20px 0;
@@ -13,12 +9,19 @@
     padding-bottom: 10px;
 }
 
-.promo {
+.card:hover {
+    outline: 3px solid rgba(229, 223, 211, 1)
+}
+
+.card.selected {
+    outline: 3px solid rgba(229, 223, 211, 1)
+}
+
+.main {
     text-align: center;
     padding-top: 120px;
     height: 65vh;
-    background: rgb(249,88,22);
-    background: linear-gradient(315deg, rgba(249,88,22,1) 0%, rgba(235,48,21,1) 100%);
+    background: linear-gradient(140deg, rgba(105, 84, 83, 0.9), rgba(230, 173, 88, 0.9));
 }
 
 .banner {
@@ -64,22 +67,40 @@
     display: none;
 }
 
-.progress {
-    margin-bottom: 5px;
-    margin-top: 5px;
+.card {
+    padding: 0;
+    text-align: center;
+    color:rgba(73, 83, 102, 1);
+    font-family: Arial, Helvetica, sans-serif;
+    border-radius: 5px;
+    border: 0px;
+    max-width: 100px;
 }
 
-.progress-bar.expected {
-    width: 0%;
-    background-color: #007bff75;
+.card-body.mat {
+    padding: 3px;
+    border-radius: 0 0 5px 5px;
 }
 
-.relic-image {
-    float: left;
+.mat-img {
+    background: linear-gradient(140deg, rgba(105, 84, 83, 0.9), rgba(230, 173, 88, 0.9));
+    border-radius: 5px 5px 0 0;
 }
 
-.relic-details {
-    float: left;
+/* selected card css */
+.artifact-selected {
+    width: 360px;
+    min-width: 30vh;
+    min-height: 80vh;
+    padding: 0;
+    border: 0;
+    margin: 0px;
+    flex-direction: column;
+    display: flex;
+}
+
+.card-text {
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 .card-top {
@@ -96,6 +117,14 @@
     padding-top: 11.89%
 }
 
+.card-text.top {
+    position: absolute;
+    top: 16%;
+    left: 6%;
+    font-size: 20px;
+    color: white;
+}
+
 .card-header {
     width: 100%;
     display: flex;
@@ -103,11 +132,12 @@
     padding-top: 2%;
     padding-left: 6%;
     padding-right: 4%;
+    flex-direction: row;
 }
 
 .card-header-left {
-    width: 55%;
     float: left;
+    flex-grow: 1;
 }
 
 .card-header-right {
@@ -115,14 +145,20 @@
     width: 45%;
 }
 
-.card {
-    padding: 0;
-    text-align: center;
-    color:rgba(73, 83, 102, 1);
-    font-family: Arial, Helvetica, sans-serif;
-    border-radius: 5px;
-    border: 0px;
-    max-width: 100px;
+.card-text.part-name {
+    height: 35%;
+    color: white;
+    font-size: 14px;
+}
+
+.card-text.main-op-name {
+    color: rgb(193, 193, 193);
+    font-size: 14px;
+}
+
+.card-text.main-op-value {
+    color: white;
+    font-size: 33px;
 }
 
 .card-body {
@@ -135,60 +171,13 @@
     height: 100%;
 }
 
-.card-body.mat {
-    padding: 3px;
-    border-radius: 0 0 5px 5px;
-}
-
-.mat-img {
-    background: linear-gradient(140deg, rgba(105, 84, 83, 0.9), rgba(230, 173, 88, 0.9));
-    border-radius: 5px 5px 0 0;
-}
-
-.set-div {
-    height: 35%;
-}
-
-.relic-set {
-    color: white;
+.text-field {
+    flex-grow: 1;
+    color: rgba(73, 83, 102, 1);
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 14px;
 }
 
-.relic {
-    width: 360px;
-    min-width: 30vh;
-    min-height: 80vh;
-    padding: 0;
-    border: 0;
-    margin: 0px;
-    flex-direction: column;
-    display: flex;
-}
-
-.relic_part {
-    color: white;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 20px;
-}
-
-.relic-main-op-name {
-    color: rgb(193, 193, 193);
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 14px;
-}
-
-.relic-main-op-value {
-    color: white;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 33px;
-}
-
-.name {
-    position: absolute;
-    top: 16%;
-    left: 6%;
-}
+/* end */
 
 .enhance-prev {
     float: left;
@@ -234,10 +223,45 @@
     margin-right: 5vw;
     width: 480px;
     float: right;
+    padding-left: 4vw;
 }
 
-.text-field {
-    flex-grow: 1;
-    color: rgba(73, 83, 102, 1);
+/* enhancing pages */
+.progress-text {
+    display: flex;
+}
+
+.adding-level {
+    padding-top: 2px;
+    width: 40%;
+}
+
+.adding-exp {
+    padding-top: 2px;
+}
+
+.artifact-level {
+    width: 10%;
+    float: left;
     font-family: Arial, Helvetica, sans-serif;
+    font-size: 21px;
+}
+
+.artifact-exp {
+    padding-top: 2px;
+    float: right;
+    flex-grow: 1;
+    text-align: right;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 17px;
+}
+
+.progress {
+    margin-bottom: 5px;
+    margin-top: 1px;
+}
+
+.progress-bar.expected {
+    width: 0%;
+    background-color: #007bff75;
 }

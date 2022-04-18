@@ -120,8 +120,6 @@ async function renderGame() {
 
     if(relic_array.length == 0) return;
 
-    console.log(relic_array);
-
     relic_array.forEach(async (relicId) => {
         let details = await contract.methods.getTokenDetails(relicId).call({from: ethereum.selectedAddress});
         renderRelic(relicId, details);
@@ -138,24 +136,13 @@ async function rerenderEnhanced(relicId) {
     if(relic_array.length == 0) return;
 
     let details = await contract.methods.getTokenDetails(relicId).call({from: ethereum.selectedAddress});
-    console.log(details.exp.current);
-    console.log(details.exp.total);
+
     renderRelic(relicId, details, true);
     setEnhancingPage(relicId, details);
 }
 
 function renderRelic(id, data, rerender=false){
-    console.log(data.sub.id[3])
     if(rerender) {
-        $(`#relic-${id} .relic_main_op`).html(`${optionNameArray[data.main.id-1]}: ${data.main.value/10}`);
-        $(`#relic-${id} .relic_level`).html(`+${data.exp.level}`);
-        $(`#relic-${id} .sub_op_field`).html(`<div><span class="relic_sub_op"> - ${optionNameArray[data.sub.id[0]-1]}: ${data.sub.value[0]/10}</span></div>
-        <div><span class="relic_sub_op"> - ${optionNameArray[data.sub.id[1]-1]}: ${data.sub.value[1]/10}</span></div>
-        <div><span class="relic_sub_op"> - ${optionNameArray[data.sub.id[2]-1]}: ${data.sub.value[2]/10}</span></div>
-        <div><span class="relic_sub_op"> ${data.sub.id[3] != 0 ? '- ' + optionNameArray[data.sub.id[3]-1] + ':' : " "} ${data.sub.id[3] != 0 ? data.sub.value[3]/10 : " "}</span></div>`)
-        if (data.exp.level == 20) {
-            $(`#relic-${id} .enhance_btn`).remove();
-        }
     }
 
     if(!rerender) {
@@ -170,27 +157,37 @@ function renderRelic(id, data, rerender=false){
             </div>`;
 
         let element = $.parseHTML(htmlString);
-        $("#relic-row").append(element);
+        $("#artifact-row").append(element);
 
         $(`#artifact-${id}`).click( () => {
+            selectCard(id);
             renderSelected(id);
         });
     }
+}
+
+async function selectCard(id) {
+    artifact_array = await contract.methods.getAllTokensForUser(ethereum.selectedAddress).call({from: ethereum.selectedAddress});
+    
+    artifact_array.forEach(async (artifactId) => {
+        if (id == artifactId) {$(`#artifact-${artifactId}`).addClass('selected');}
+        else {$(`#artifact-${artifactId}`).removeClass('selected');}
+    });
 }
 
 async function renderSelected(id) {
     let data = await contract.methods.getTokenDetails(id).call({from: ethereum.selectedAddress});
 
     let htmlString = `
-        <div class="relic" id="relic-${id}">
+        <div class="artifact-selected" id="relic-${id}">
             <div class="card-top">
-                <div class="name"><span class="relic_part">${setPartNameArray[data.set][data.part-1]}</span></div>
+                <div class="card-text top"><span>${setPartNameArray[data.set][data.part-1]}</span></div>
             </div>
             <div class="card-header">
                 <div class="card-header-left">
-                    <div class="set-div"><span class="relic-set">${partNameArray[data.part-1]}</span></div>
-                    <div><span class="relic-main-op-name">${optionNameArray[data.main.id-1]}</span></div>
-                    <div><span class="relic-main-op-value">${parseInt(data.main.value/10)}</span></div>
+                    <div class="card-text part-name"><span>${partNameArray[data.part-1]}</span></div>
+                    <div><span class="card-text main-op-name">${optionNameArray[data.main.id-1]}</span></div>
+                    <div><span class="card-text main-op-value">${parseInt(data.main.value/10)}</span></div>
                     <div class="stars"></div>
                 </div>
                 <div class="card-header-right">
@@ -199,18 +196,18 @@ async function renderSelected(id) {
             </div>
             <div class="card-body">
                 <div class="body-header">
-                    <div><span class="relic_level">+${data.exp.level} </span></div>
+                    <div><span class="artifact-lv">+${data.exp.level} </span></div>
                     <div><span class="lock"></div>
                 </div>
                 <div class="text-field">
-                    <div class="sub_op_field">
-                        <div><span class="relic_sub_op"> - ${parseString(data, 0)}</span></div>
-                        <div><span class="relic_sub_op"> - ${parseString(data, 1)}</span></div>
-                        <div><span class="relic_sub_op"> - ${parseString(data, 2)}</span></div>
-                        <div><span class="relic_sub_op">${data.sub.id[3] != 0 ? ' - ' + parseString(data, 3) : ""}</span></div>
+                    <div class="sub-op-field">
+                        <div><span class="artifact-sub-op"> - ${parseString(data, 0)}</span></div>
+                        <div><span class="artifact-sub-op"> - ${parseString(data, 1)}</span></div>
+                        <div><span class="artifact-sub-op"> - ${parseString(data, 2)}</span></div>
+                        <div><span class="artifact-sub-op">${data.sub.id[3] != 0 ? ' - ' + parseString(data, 3) : ""}</span></div>
                     </div>
                     <div class="set-details">
-                        <div><span class="relic_set">${setNameArray[data.set]}:</span></div>
+                        <div><span class="artifact_set">${setNameArray[data.set]}:</span></div>
                         <div><span class="effect_two"></span></div>
                         <div><span class="effect_four"></span></div>
                         <div><span class="story"></span></div>
@@ -310,11 +307,11 @@ function setEnhancingPage(id, data) {
                 <img class="enhance-img" src="assets/Artifacts/${data.set}/${data.part}.png" id="relic_img">
             </div>
             <div class="enhance-details">
-                <div>
-                    <span class="relic_level">+${data.exp.level} </span>
-                    <span class="adding_level"></span>
-                    <span class="adding_exp"></span>
-                    <span class="relic_level"> ${data.exp.current}/${data.exp.next} </span>    
+                <div class="progress-text">
+                    <div class="artifact-level"><span>+${data.exp.level} </span></div>
+                    <div class="adding-level"><span></span></div>
+                    <div><span class="adding-exp"></span></div>
+                    <div class="artifact-exp"><span> ${data.exp.current}/${data.exp.next} </span></div> 
                 </div>
                 <div class="progress">
                     <div class="progress-bar" style="width: ${percentageString};">
@@ -442,10 +439,10 @@ function renewProgressBar(level, nextExp, totalExp) {
     let expected = ratio * 100 + '%';
     console.log(expected)
     $(`.progress-bar.expected`).width(expected);
-    if (evalMatExp() > 0) $(`.adding_exp`).html(`+${evalMatExp()}`);
-    else $(`.adding_exp`).html(``);
-    if (plusLv > 0) $(`.adding_level`).html(`+${plusLv}`);
-    else $(`.adding_level`).html(``);
+    if (evalMatExp() > 0) $(`.adding-exp`).html(`+${evalMatExp()}`);
+    else $(`.adding-exp`).html(``);
+    if (plusLv > 0) $(`.adding-level`).html(`+${plusLv}`);
+    else $(`.adding-level`).html(``);
 }
 
 function parseString(data, subIndex=-1) {
