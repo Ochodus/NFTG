@@ -79,13 +79,21 @@ contract Token is ERC1155, Ownable {
         return -1;
     }
 
-    function mint(uint256 location, uint256 difficulty) public onlyOwner {
-        uint256 set = getRandomSet(location);
-        uint256 part = getRandomPart();
+    function rand_mint(uint256 location, uint256 difficulty) public onlyOwner {
+        uint quant = createRandom(2, 0);
+
+        for (uint i = 0; i < quant+1; i++) {
+            mint(location, difficulty, i);
+        }
+    }
+
+    function mint(uint256 location, uint256 difficulty, uint256 nonce) public {
+        uint256 set = getRandomSet(location, nonce);
+        uint256 part = getRandomPart(nonce);
         uint256 stars = getStars(difficulty);
 
-        MainOp memory main = getMainStats(part);
-        SubOp memory sub = getSubStats(main.id);
+        MainOp memory main = getMainStats(part, nonce);
+        SubOp memory sub = getSubStats(main.id, nonce);
         Exp memory exp = getExpStats();
 
         _tokenDetails[nextId] = Relic(part, set, stars, main, sub, exp);
@@ -93,13 +101,13 @@ contract Token is ERC1155, Ownable {
         nextId++;
     }  
 
-    function getRandomPart() public view returns (uint256) {
-        uint256 part = uint256(createRandom(5, 0));
+    function getRandomPart(uint256 nonce) public view returns (uint256) {
+        uint256 part = uint256(createRandom(5, nonce));
         return part;
     }
 
-    function getRandomSet(uint256 location) public view returns (uint256) {
-        uint256 set = (location * 2) + uint256(createRandom(2, 0));
+    function getRandomSet(uint256 location, uint nonce) public view returns (uint256) {
+        uint256 set = (location * 2) + uint256(createRandom(2, nonce));
         return set;
     }
 
@@ -108,34 +116,34 @@ contract Token is ERC1155, Ownable {
         return stars;
     }
 
-    function getMainStats(uint256 part) public view returns (MainOp memory) {
-        uint256 mainOpType = getMainOpType(part);
+    function getMainStats(uint256 part, uint nonce) public view returns (MainOp memory) {
+        uint256 mainOpType = getMainOpType(part, nonce);
         uint256 mainOpValue = getMainOpValue(mainOpType);
         MainOp memory main = MainOp(mainOpType, mainOpValue);
         return main;
     }
 
-    function getMainOpType(uint256 part) public view returns (uint256) {
+    function getMainOpType(uint256 part, uint nonce) public view returns (uint256) {
         uint256 mainOpType = 0;
         if (part == 1) {
             mainOpType = 2;
         }
         else if (part == 2) {
             mainOpType = 1;
-        }     
+        }
         else if (part == 3) {
             uint256[5] memory typeArray;
             typeArray = [uint256(4), 5, 6, 9, 10];
-            mainOpType = typeArray[createRandom(typeArray.length, 0)];
+            mainOpType = typeArray[createRandom(typeArray.length, nonce)];
         }
         else if (part == 4) {
             uint256[11] memory typeArray;
             typeArray = [uint256(4), 5, 6, 9, 11, 12, 13, 14, 15, 16, 17];
-            mainOpType = typeArray[createRandom(typeArray.length, 0)];
+            mainOpType = typeArray[createRandom(typeArray.length, nonce)];
         }
         else if (part == 5) {
             uint256[7] memory typeArray = [uint256(4), 5, 6, 7, 8, 9, 18];
-            mainOpType = typeArray[createRandom(typeArray.length, 0)];
+            mainOpType = typeArray[createRandom(typeArray.length, nonce)];
         }
         return mainOpType;
     }
@@ -145,17 +153,17 @@ contract Token is ERC1155, Ownable {
         return mainOpValue;
     }
 
-    function getSubStats(uint256 mainOpType) public view returns (SubOp memory) {
-        (uint256[4] memory subOpType, uint256[10] memory subOpCdd, uint length) = getSubOpType(mainOpType);
-        uint256[4] memory subOpValue = getSubOpValue(subOpType);
+    function getSubStats(uint256 mainOpType, uint nonce) public view returns (SubOp memory) {
+        (uint256[4] memory subOpType, uint256[10] memory subOpCdd, uint length) = getSubOpType(mainOpType, nonce);
+        uint256[4] memory subOpValue = getSubOpValue(subOpType, nonce);
         SubOp memory subStats = SubOp(subOpType, subOpValue, subOpCdd, length);
         return subStats;
     }
 
-    function getSubOpType(uint256 mainOpType) public view returns (uint256[4] memory, uint256[10] memory, uint) {
+    function getSubOpType(uint256 mainOpType, uint nonce) public view returns (uint256[4] memory, uint256[10] memory, uint) {
         uint256[4] memory subOpType = [uint256(0), 0, 0, 0];
         uint256[10] memory subOpCdd = [uint256(1), 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        uint256 isFourLine = uint256(createRandom(2, 0));
+        uint256 isFourLine = uint256(createRandom(2, nonce));
         uint length = 10;
 
         if (indexOf(subOpCdd, mainOpType) != -1) {
@@ -164,7 +172,7 @@ contract Token is ERC1155, Ownable {
         }
 
         for (uint256 i = 0; i < 4; i++) {
-            subOpType[i] = subOpCdd[createRandom(length, i)];
+            subOpType[i] = subOpCdd[createRandom(length, i * nonce)];
             subOpCdd = removeElement(subOpType[i], subOpCdd);
             length -= 1;
         }
@@ -176,14 +184,14 @@ contract Token is ERC1155, Ownable {
         return (subOpType, subOpCdd, length);
     }
 
-    function getSubOpValue(uint256[4] memory subOpType) public view returns (uint256[4] memory) {
+    function getSubOpValue(uint256[4] memory subOpType, uint nonce) public view returns (uint256[4] memory) {
         uint256[4] memory subOpValue = [uint256(0), 0, 0, 0];
         
         uint256 offset;
         for (uint256 i = 0; i < 4; i++) {
             if (subOpType[i] == 0) { continue; }
 
-            offset = uint256(createRandom(4, i));
+            offset = uint256(createRandom(4, i * nonce));
             subOpValue[i] = valueArray[(subOpType[i]-1) * 4 + offset];
         }
 

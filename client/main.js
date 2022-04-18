@@ -4,7 +4,7 @@ const serverUrl = "https://lxawa30bwsfh.usemoralis.com:2053/server";
 //Moralis.start({serverUrl, appId});
 Moralis.initialize(appId);
 Moralis.serverURL = serverUrl;
-const CONTRACT_ADDRESS = "0x0F6F85D3d798308EDCe2fbB824e05CEf92a52aF2";
+const CONTRACT_ADDRESS = "0x39eab2B93Ed24bAa47ee535C9F347A9b5088C65a";
 
 const MAIN_TAB = 0;
 const RELIC_TAB = 1;
@@ -116,17 +116,6 @@ async function renderGame() {
     abi = await getAbi();
     contract = new web3.eth.Contract(abi, CONTRACT_ADDRESS);
 
-    relic_array = await contract.methods.getAllTokensForUser(ethereum.selectedAddress).call({from: ethereum.selectedAddress});
-
-    if(relic_array.length == 0) return;
-
-    relic_array.forEach(async (relicId) => {
-        let details = await contract.methods.getTokenDetails(relicId).call({from: ethereum.selectedAddress});
-        renderRelic(relicId, details);
-    });
-
-    renderSelected(0);
-
     changeTab(RELIC_TAB);
 }
 
@@ -142,28 +131,23 @@ async function rerenderEnhanced(relicId) {
 }
 
 function renderRelic(id, data, rerender=false){
-    if(rerender) {
-    }
+    let htmlString = `
+        <div class="col-md-3 card mx-1" id="artifact-${id}">
+            <div class="mat-img">
+                <img class="card-img-top mater" src="assets/artifacts/${data.set}/${data.part}.png" id="relic_img">
+            </div>
+            <div class="card-body mat">
+                <div><span class="relic_level">+${data.exp.level}</span></div>
+            </div>
+        </div>`;
 
-    if(!rerender) {
-        let htmlString = `
-            <div class="col-md-3 card mx-1" id="artifact-${id}">
-                <div class="mat-img">
-                    <img class="card-img-top mater" src="assets/artifacts/${data.set}/${data.part}.png" id="relic_img">
-                </div>
-                <div class="card-body mat">
-                    <div><span class="relic_level">+${data.exp.level}</span></div>
-                </div>
-            </div>`;
+    let element = $.parseHTML(htmlString);
+    $("#artifact-row").append(element);
 
-        let element = $.parseHTML(htmlString);
-        $("#artifact-row").append(element);
-
-        $(`#artifact-${id}`).click( () => {
-            selectCard(id);
-            renderSelected(id);
-        });
-    }
+    $(`#artifact-${id}`).click( () => {
+        selectCard(id);
+        renderSelected(id);
+    });
 }
 
 async function selectCard(id) {
@@ -178,7 +162,8 @@ async function selectCard(id) {
 async function renderSelected(id) {
     let data = await contract.methods.getTokenDetails(id).call({from: ethereum.selectedAddress});
 
-    let htmlString = `
+    let htmlString;
+        htmlString = `
         <div class="artifact-selected" id="relic-${id}">
             <div class="card-top">
                 <div class="card-text top"><span>${setPartNameArray[data.set][data.part-1]}</span></div>
@@ -196,8 +181,8 @@ async function renderSelected(id) {
             </div>
             <div class="card-body">
                 <div class="body-header">
-                    <div><span class="artifact-lv">+${data.exp.level} </span></div>
-                    <div><span class="lock"></div>
+                    <div class="artifact-lv"><span>+${data.exp.level} </span></div>
+                    <div class="lock"><span></div>
                 </div>
                 <div class="text-field">
                     <div class="sub-op-field">
@@ -207,7 +192,7 @@ async function renderSelected(id) {
                         <div><span class="artifact-sub-op">${data.sub.id[3] != 0 ? ' - ' + parseString(data, 3) : ""}</span></div>
                     </div>
                     <div class="set-details">
-                        <div><span class="artifact_set">${setNameArray[data.set]}:</span></div>
+                        <div><span class="artifact-set">${setNameArray[data.set]}:</span></div>
                         <div><span class="effect_two"></span></div>
                         <div><span class="effect_four"></span></div>
                         <div><span class="story"></span></div>
@@ -244,7 +229,7 @@ async function enhancing(relicId, exp) {
     }))
 }
 
-function changeTab(tabNumber) {
+async function changeTab(tabNumber) {
     if(tabNumber == 0) {
         $("#main").show();
         $("#game").hide();
@@ -256,6 +241,18 @@ function changeTab(tabNumber) {
         $("#main").hide();
         $("#domain").hide();
         $('#enhancing-page').hide();
+
+        $("#artifact-row").html("");
+
+        relic_array = await contract.methods.getAllTokensForUser(ethereum.selectedAddress).call({from: ethereum.selectedAddress});
+
+        if (relic_array.length > 0) {
+            relic_array.forEach(async (relicId) => {
+                let details = await contract.methods.getTokenDetails(relicId).call({from: ethereum.selectedAddress});
+                renderRelic(relicId, details);
+            });
+            renderSelected(0);
+        }
     }
     else if (tabNumber == 2) {
         $("#domain").show();
@@ -272,12 +269,8 @@ function changeTab(tabNumber) {
 }
 
 async function getNewRelic(location, diff) {
-    //contract.methods.sendTransaction({from: ethereum.selectedAddress[0], to: CONTRACT_ADDRESS, value: web3.utils.toWei("5", "ether"), gas: 100000});
-    contract.methods.mint(location, diff).send({from: ethereum.selectedAddress}).on("receipt", ( async () => {
+    contract.methods.rand_mint(location, diff).send({from: ethereum.selectedAddress}).on("receipt", ( async () => {
         relic_array = await contract.methods.getAllTokensForUser(ethereum.selectedAddress).call({from: ethereum.selectedAddress});
-        let details = await contract.methods.getTokenDetails(relic_array.length-1).call({from: ethereum.selectedAddress});
-        console.log(details.sub.id);
-        renderRelic(relic_array.length-1, details);
     }));
 }
 
@@ -302,8 +295,7 @@ function setEnhancingPage(id, data) {
     let percentageString = (curExp/nextExp)*100 + '%';
     let htmlString = `
             <div class="enhance-prev">
-                <div><span class="relic_name">${setNameArray[data.set]}</span></div>
-                <div><span class="relic_part">${partNameArray[data.part-1]}</span></div>
+                <div class="enhancing-artifact-name"><span>${partNameArray[data.part-1]} / ${setNameArray[data.set]}</span></div>
                 <img class="enhance-img" src="assets/Artifacts/${data.set}/${data.part}.png" id="relic_img">
             </div>
             <div class="enhance-details">
@@ -321,22 +313,79 @@ function setEnhancingPage(id, data) {
                     
                     </div>
                 </div>
-                <div><span class="relic_main_op">${parseString(data)}</span></div>
-                <div class="sub_op_field">
-                    <div><span class="relic_sub_op"> - ${parseString(data, 0)}</span></div>
-                    <div><span class="relic_sub_op"> - ${parseString(data, 1)}</span></div>
-                    <div><span class="relic_sub_op"> - ${parseString(data, 2)}</span></div>
-                    <div><span class="relic_sub_op">${data.sub.id[3] != 0 ? ' - ' + parseString(data, 3) : ""}</span></div>
+                <div class="enhancing-artifact-main-op">
+                    <div class="name"><span>${optionNameArray[data.main.id]}</span></div>
+                    <div class="value"><span>${data.main.value}</span></div>
                 </div>
-                <div class="relic-enhance">
-                    <div><span>장비 강화 소모</span></div>
+                <div class="sub-op-field">
+                    <div class="enhancing-artifact-sub-op odd">
+                        <div class="name"><span> ${optionNameArray[data.sub.id[0]]}</span></div>
+                        <div class="value"><span> ${data.sub.value[0]/10}</span></div>
+                    </div>
+                    <div class="enhancing-artifact-sub-op even">
+                        <div class="name"><span> ${optionNameArray[data.sub.id[1]]}</span></div>
+                        <div class="value"><span> ${data.sub.value[1]/10}</span></div>
+                    </div>
+                    <div class="enhancing-artifact-sub-op odd">
+                        <div class="name"><span> ${optionNameArray[data.sub.id[2]]}</span></div>
+                        <div class="value"><span> ${data.sub.value[2]/10}</span></div>
+                    </div>
+                    <div class="enhancing-artifact-sub-op even">
+                        <div class="name"><span> ${data.sub.id[3] != 0 ? optionNameArray[data.sub.id[3]] : ""}</span></div>
+                        <div class="value"><span> ${data.sub.id[3] != 0 ? data.sub.value[3]/10 : ""}</span></div>
+                    </div>
+                </div>
+                <div class="mat-select">
+                    <div class="select-header"><span>장비 강화 소모</span></div>
                     <div class="enhance-materials row">
-                        <div class="mater-li col-md-1 card mx-auto" id="mat-li-1">+</div>
-                        <div class="mater-li col-md-1 card mx-auto" id="mat-li-2">+</div>
-                        <div class="mater-li col-md-1 card mx-auto" id="mat-li-3">+</div>
-                        <div class="mater-li col-md-1 card mx-auto" id="mat-li-4">+</div>
-                        <div class="mater-li col-md-1 card mx-auto" id="mat-li-5">+</div>
-                        <div class="mater-li col-md-1 card mx-auto" id="mat-li-6">+</div>
+                        <div class="col-md-3 card mx-1 enhance" id="mat-li-1">
+                            <div class="mat-img enhance">
+                                <img class="card-img-top mater" src="" id="mat-img-1">
+                            </div>
+                            <div class="card-body mat enhance">
+                                <div><span id="mat-lv-1">--</span></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 card mx-1 enhance" id="mat-li-2">
+                            <div class="mat-img enhance">
+                                <img class="card-img-top mater" src="" id="mat-img-2">
+                            </div>
+                            <div class="card-body mat enhance">
+                                <div><span id="mat-lv-2">--</span></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 card mx-1 enhance" id="mat-li-3">
+                            <div class="mat-img enhance">
+                                <img class="card-img-top mater" src="" id="mat-img-3">
+                            </div>
+                            <div class="card-body mat enhance">
+                                <div><span id="mat-lv-3">--</span></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 card mx-1 enhance" id="mat-li-4">
+                            <div class="mat-img enhance">
+                                <img class="card-img-top mater" src="" id="mat-img-4">
+                            </div>
+                            <div class="card-body mat enhance">
+                                <div><span id="mat-lv-4">--</span></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 card mx-1 enhance" id="mat-li-5">
+                            <div class="mat-img enhance">
+                                <img class="card-img-top mater" src="" id="mat-img-5">
+                            </div>
+                            <div class="card-body mat enhance">
+                                <div><span id="mat-lv-5">--</span></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 card mx-1 enhance" id="mat-li-6">
+                            <div class="mat-img enhance">
+                                <img class="card-img-top mater" src="" id="mat-img-6">
+                            </div>
+                            <div class="card-body mat enhance">
+                                <div><span id="mat-lv-6">--</span></div>
+                            </div>
+                        </div>
                     </div>
                     <button id="enhance-${id}" class="enhance_page_btn btn btn-primary btn-block">Enhance</button>
                 </div>
@@ -344,34 +393,31 @@ function setEnhancingPage(id, data) {
         `;
     
     $(`#enhancing-page`).html(htmlString);
-    $(`.mater-li`).click( async () => {
-        $('#myModal').modal('show');
-        $(`#mater-row`).html("");
-        relic_array = await contract.methods.getAllTokensForUser(ethereum.selectedAddress).call({from: ethereum.selectedAddress});
-        relic_array.forEach(async (relicId) => {
-            let details = await contract.methods.getTokenDetails(relicId).call({from: ethereum.selectedAddress});
-            renderMaters(relicId, details, id, data);
+
+    for (let i=0; i < 6; i++) {
+        $(`#mat-li-${i}`).click( async () => {
+            $('#myModal').modal('show');
+
+            $(`#mater-row`).html("");
+            relic_array = await contract.methods.getAllTokensForUser(ethereum.selectedAddress).call({from: ethereum.selectedAddress});
+            relic_array.forEach(async (relicId) => {
+                let details = await contract.methods.getTokenDetails(relicId).call({from: ethereum.selectedAddress});
+                renderMaters(relicId, details, id, data);
+            });
         });
-        
-    });
+    }
+    
     $(`#enhance-${id}`).click( async () => {
-        enhancing(id, evalMatExp());
+        if (selectedMatID.length > 0) {
+            enhancing(id, evalMatExp());
+        }
     });
 }
 
 function renderMaters(matId, matData, targetId, targetData) {
     let modalContents = `
         <div class="col-md-3 card mx-1" id="mater-${matId}">
-            <img class="card-img-top mater" src="assets/artifacts/${matData.set}/${matData.part}.png" id="relic_img">
-            <div class="card-body mat">
-                <div><span class="relic_level"> ${matData.exp.level} </span></div>
-            </div>
-        </div>`
-    ;
-
-    let listContents = `
-        <div class="m-0 card mx-auto inlist" id="inlist-${matId}">
-            <img class="card-img-top mater" src="assets/artifacts/${matData.set}/${matData.part}.png" id="relic_img">
+            <img class="mat-img" src="assets/artifacts/${matData.set}/${matData.part}.png" id="relic_img">
             <div class="card-body mat">
                 <div><span class="relic_level"> ${matData.exp.level} </span></div>
             </div>
@@ -382,27 +428,39 @@ function renderMaters(matId, matData, targetId, targetData) {
     $(`#mater-row`).append(element);
 
     let card = $(`#mater-${matId}`);
-    if (selectedMatID.indexOf(matData) != -1) {
+    if (getMatIndex(matData) != -1) {
         card.addClass('selected');
     }
 
     card.click( async () => {
         if (card.hasClass('selected')) {
             card.removeClass('selected');
-            let targetIndex = selectedMatID.indexOf(matData) + 1;
-            while (targetIndex < 6) {
-                let copy = $($(`#mat-li-${targetIndex+1}`).html())
-                $(`#mat-li-${targetIndex}`).html(copy);
-                targetIndex++;
+            let targetIndex = getMatIndex(matData) + 1;
+            if (targetIndex == 6) {
+                let copy_img = "";
+                let copy_lv = "--";
+                $(`#mat-img-${targetIndex}`).attr('src', copy_img);
+                $(`#mat-lv-${targetIndex}`).html(copy_lv);
             }
-            selectedMatID = selectedMatID.filter((element) => element !== matData);
-            console.log(selectedMatID);
+            else {
+                while (targetIndex < 6) {
+                    let copy_img = $(`#mat-img-${targetIndex+1}`).attr('src');
+                    let copy_lv = $(`#mat-lv-${targetIndex+1}`).html();
+                    $(`#mat-img-${targetIndex}`).attr('src', copy_img);
+                    $(`#mat-lv-${targetIndex}`).html(copy_lv);
+                    targetIndex++;
+                }
+            }
+            selectedMatID = selectedMatID.filter((element) => JSON.stringify(element) !== JSON.stringify(matData));
         }
         else {
-            card.addClass('selected');
-            selectedMatID.push(matData);
-            $(`#mat-li-${selectedMatID.length}`).html(listContents);
-            console.log(selectedMatID);
+            if(selectedMatID.length < 6) {
+                card.addClass('selected');
+                selectedMatID.push(matData);
+                console.log(`assets/artifacts/${matData.set}/${matData.part}.png`)
+                $(`#mat-img-${selectedMatID.length}`).attr('src', `assets/artifacts/${matData.set}/${matData.part}.png`)
+                $(`#mat-lv-${selectedMatID.length}`).html(`+${matData.exp.level}`)
+            }
         }
         renewProgressBar(targetData.exp.level, targetData.exp.next, targetData.exp.total);
     })
@@ -457,6 +515,13 @@ function parseString(data, subIndex=-1) {
     if (nonPercentType.indexOf(Number(id)) == -1) { string = string + "%"; }
 
     return string
+}
+
+function getMatIndex(matData) {
+    for (let i=0; i < selectedMatID.length; i++) {
+        if (JSON.stringify(selectedMatID[i]) == JSON.stringify(matData)) return i;
+    }
+    return -1;
 }
 
 init();
