@@ -4,7 +4,7 @@ const serverUrl = "https://lxawa30bwsfh.usemoralis.com:2053/server";
 //Moralis.start({serverUrl, appId});
 Moralis.initialize(appId);
 Moralis.serverURL = serverUrl;
-const CONTRACT_ADDRESS = "0x39eab2B93Ed24bAa47ee535C9F347A9b5088C65a";
+const CONTRACT_ADDRESS = "0xd43E59952a68BBbCE222b323f38A5ab200Ce4dc8";
 
 const MAIN_TAB = 0;
 const RELIC_TAB = 1;
@@ -17,6 +17,7 @@ var web3;
 var abi;
 var contract;
 var relic_array;
+var selectedId;
 
 var setNameArray = ["Gladiator's Finale", "Wanderer's Troupe", 
                     "Thundering Fury", "Thundersoother", 
@@ -161,6 +162,8 @@ async function selectCard(id) {
 
 async function renderSelected(id) {
     let data = await contract.methods.getTokenDetails(id).call({from: ethereum.selectedAddress});
+    
+    selectedId = id;
 
     let htmlString;
         htmlString = `
@@ -172,7 +175,7 @@ async function renderSelected(id) {
                 <div class="card-header-left">
                     <div class="card-text part-name"><span>${partNameArray[data.part-1]}</span></div>
                     <div><span class="card-text main-op-name">${optionNameArray[data.main.id-1]}</span></div>
-                    <div><span class="card-text main-op-value">${parseInt(data.main.value/10)}</span></div>
+                    <div><span class="card-text main-op-value">${parseInt(data.main.value/10)}${nonPercentType.indexOf(Number(data.main.id)) == -1 ? '%' : ''}</span></div>
                     <div class="stars"></div>
                 </div>
                 <div class="card-header-right">
@@ -222,7 +225,11 @@ function getAbi() {
 }
 
 async function enhancing(relicId, exp) {
-    let details = await contract.methods.getTokenDetails(relic_array.length-1).call({from: ethereum.selectedAddress});
+    let id_array = [];
+    for (let i = 0; i < selectedMatID.length; i++) {
+        id_array.push(selectedMatID[i].id);
+    }
+
     contract.methods.enhance(relicId, exp).send({from: ethereum.selectedAddress}).on("receipt", ( () => {
         rerenderEnhanced(relicId);
         selectedMatID = [];
@@ -292,6 +299,7 @@ function getRandomInt(min, max) {
 function setEnhancingPage(id, data) {
     let curExp = data.exp.current;
     let nextExp = data.exp.next;
+
     let percentageString = (curExp/nextExp)*100 + '%';
     let htmlString = `
             <div class="enhance-prev">
@@ -314,29 +322,29 @@ function setEnhancingPage(id, data) {
                     </div>
                 </div>
                 <div class="enhancing-artifact-main-op">
-                    <div class="name"><span>${optionNameArray[data.main.id]}</span></div>
-                    <div class="value"><span>${data.main.value}</span></div>
+                    <div class="name"><span>${optionNameArray[data.main.id-1]}</span></div>
+                    <div class="value"><span>${parseInt(data.main.value/10)}${nonPercentType.indexOf(Number(data.main.id)) == -1 ? '%' : ''}</span></div>
                 </div>
                 <div class="sub-op-field">
                     <div class="enhancing-artifact-sub-op odd">
-                        <div class="name"><span> ${optionNameArray[data.sub.id[0]]}</span></div>
-                        <div class="value"><span> ${data.sub.value[0]/10}</span></div>
+                        <div class="name"><span> ${optionNameArray[data.sub.id[0]-1]}</span></div>
+                        <div class="value"><span> ${data.sub.value[0]/10}${nonPercentType.indexOf(Number(data.sub.id[0])) == -1 ? '%' : ''}</span></div>
                     </div>
                     <div class="enhancing-artifact-sub-op even">
-                        <div class="name"><span> ${optionNameArray[data.sub.id[1]]}</span></div>
-                        <div class="value"><span> ${data.sub.value[1]/10}</span></div>
+                        <div class="name"><span> ${optionNameArray[data.sub.id[1]-1]}</span></div>
+                        <div class="value"><span> ${data.sub.value[1]/10}${nonPercentType.indexOf(Number(data.sub.id[1])) == -1 ? '%' : ''}</span></div>
                     </div>
                     <div class="enhancing-artifact-sub-op odd">
-                        <div class="name"><span> ${optionNameArray[data.sub.id[2]]}</span></div>
-                        <div class="value"><span> ${data.sub.value[2]/10}</span></div>
+                        <div class="name"><span> ${optionNameArray[data.sub.id[2]-1]}</span></div>
+                        <div class="value"><span> ${data.sub.value[2]/10}${nonPercentType.indexOf(Number(data.sub.id[2])) == -1 ? '%' : ''}</span></div>
                     </div>
                     <div class="enhancing-artifact-sub-op even">
-                        <div class="name"><span> ${data.sub.id[3] != 0 ? optionNameArray[data.sub.id[3]] : ""}</span></div>
-                        <div class="value"><span> ${data.sub.id[3] != 0 ? data.sub.value[3]/10 : ""}</span></div>
+                        <div class="name"><span> ${data.sub.id[3] != 0 ? optionNameArray[data.sub.id[3]-1] : ""}</span></div>
+                        <div class="value"><span> ${data.sub.id[3] != 0 ? data.sub.value[3]/10 + (nonPercentType.indexOf(Number(data.sub.id[3])) == -1 ? '%' : '') : ""}</span></div>
                     </div>
                 </div>
                 <div class="mat-select">
-                    <div class="select-header"><span>장비 강화 소모</span></div>
+                    <div class="select-header"><span>Enhancement Materials</span></div>
                     <div class="enhance-materials row">
                         <div class="col-md-3 card mx-1 enhance" id="mat-li-1">
                             <div class="mat-img enhance">
@@ -387,7 +395,7 @@ function setEnhancingPage(id, data) {
                             </div>
                         </div>
                     </div>
-                    <button id="enhance-${id}" class="enhance_page_btn btn btn-primary btn-block">Enhance</button>
+                    <button id="enhance" class="enhance_page_btn btn btn-primary btn-block">Enhance</button>
                 </div>
             </div>
         `;
@@ -402,12 +410,14 @@ function setEnhancingPage(id, data) {
             relic_array = await contract.methods.getAllTokensForUser(ethereum.selectedAddress).call({from: ethereum.selectedAddress});
             relic_array.forEach(async (relicId) => {
                 let details = await contract.methods.getTokenDetails(relicId).call({from: ethereum.selectedAddress});
-                renderMaters(relicId, details, id, data);
+                if (relicId != selectedId) {
+                    renderMaters(relicId, details, id, data);
+                }
             });
         });
     }
     
-    $(`#enhance-${id}`).click( async () => {
+    $(`#enhance`).click( async () => {
         if (selectedMatID.length > 0) {
             enhancing(id, evalMatExp());
         }

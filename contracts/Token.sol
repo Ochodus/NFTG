@@ -102,7 +102,7 @@ contract Token is ERC1155, Ownable {
     }  
 
     function getRandomPart(uint256 nonce) public view returns (uint256) {
-        uint256 part = uint256(createRandom(5, nonce));
+        uint256 part = uint256(createRandom(5, nonce)) + 1;
         return part;
     }
 
@@ -239,17 +239,21 @@ contract Token is ERC1155, Ownable {
                             targetValue = valueArray[(targetType-1) * 4 + offsetIndex];
                             sub.value[targetIndex] += targetValue;
                         }
+                        main.value += mainOpInc[main.id-1];
                         continue;
                     }
                     else {
                         exp.current = exp.total - EXP_ACC[k-1];
-                        main.value += k * mainOpInc[main.id-1];
                         exp.next = EXP_DEMAND[exp.level];
                         break;
                     }
                 }
             }
         }
+
+        // for (uint i = 0; i < matId.length; i++) {
+        //     delete _tokenDetails[matId[i]];
+        // }
     }
 
     function createRandom(uint number, uint randNonce) public view returns(uint) {
